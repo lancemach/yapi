@@ -44,6 +44,25 @@ class List extends Component {
     );
   };
 
+  addUser = () => {
+    const { email: email, password: password, username: username } = this.state;
+    if (!email || !password || !username) {
+      message.success('字段均不能为空');
+      return false;
+    }
+    axios.post('/api/user/add', { email, password, username }).then(res => {
+      if (res.data.errcode === 0) {
+        message.success('添加成功');
+        this.getUserList();
+        this.setState({
+          addUserVisible: false
+        });
+      } else {
+        message.error(res.data.errmsg);
+      }
+    });
+  };
+
   getUserList() {
     axios.get('/api/user/list?page=' + this.state.current + '&limit=' + limit).then(res => {
       let result = res.data;
@@ -169,14 +188,14 @@ class List extends Component {
             <span>
               {/* <span className="ant-divider" /> */}
               <Popconfirm
-                title="确认删除此用户?"
+                title='确认删除此用户?'
                 onConfirm={() => {
                   this.confirm(item._id);
                 }}
-                okText="确定"
-                cancelText="取消"
+                okText='确定'
+                cancelText='取消'
               >
-                <a style={{ display: 'block', textAlign: 'center' }} href="#">
+                <a style={{ display: 'block', textAlign: 'center' }} href='#'>
                   删除
                 </a>
               </Popconfirm>
@@ -207,13 +226,18 @@ class List extends Component {
     };
 
     return (
-      <section className="user-table">
-        <div className="user-search-wrapper">
+      <section className='user-table'>
+        <div className='user-search-wrapper'>
+          <div style={{ marginBottom: '10px' }}>
+            <Button type='primary' onClick={() => this.setState({ addUserVisible: true })}>
+              添加用户
+            </Button>
+          </div>
           <h2 style={{ marginBottom: '10px' }}>用户总数：{this.state.total}位</h2>
           <Search
             onChange={e => this.handleSearch(e.target.value)}
             onSearch={this.handleSearch}
-            placeholder="请输入用户名"
+            placeholder='请输入用户名'
           />
         </div>
         <Table
@@ -223,6 +247,50 @@ class List extends Component {
           pagination={this.state.isSearch ? defaultPageConfig : pageConfig}
           dataSource={data}
         />
+        <Modal
+          title='添加用户'
+          visible={this.state.addUserVisible}
+          onOk={this.addUser}
+          onCancel={() =>
+            this.setState({ addUserVisible: false, email: '', password: '', username: '' })
+          }
+          className='add-group-modal'
+        >
+          <Row gutter={6} className='modal-input'>
+            <Col span='5'>
+              <div className='label'>Email：</div>
+            </Col>
+            <Col span='15'>
+              <Input
+                placeholder='请输入邮箱'
+                onChange={e => this.setState({ email: e.target.value })}
+              />
+            </Col>
+          </Row>
+          <Row gutter={6} className='modal-input'>
+            <Col span='5'>
+              <div className='label'>密码：</div>
+            </Col>
+            <Col span='15'>
+              <Input
+                placeholder='请输入密码'
+                type='password'
+                onChange={e => this.setState({ password: e.target.value })}
+              />
+            </Col>
+          </Row>
+          <Row gutter={6} className='modal-input'>
+            <Col span='5'>
+              <div className='label'>用户名：</div>
+            </Col>
+            <Col span='15'>
+              <Input
+                placeholder='用户名'
+                onChange={e => this.setState({ username: e.target.value })}
+              />
+            </Col>
+          </Row>
+        </Modal>
       </section>
     );
   }
